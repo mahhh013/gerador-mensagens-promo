@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gerador de Ofertas para WhatsApp</title>
+<style>
+  /* ===== Cores (claro/escuro) ===== */
+  :root{
+    --bg:#f3f5f4; --card:#ffffff; --text:#1c2321; --muted:#5d6b66; --line:#dbe2df;
+    --brand:#128c4a; --brand-text:#ffffff; --bubble:#d9fdd3; --chat:#efeae2;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111816; --card:#1b2421; --text:#e8efec; --muted:#9fb0a9; --line:#2d3a36;
+      --brand:#25b866; --brand-text:#06210f; --bubble:#144d37; --chat:#0b141a; color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111816; --card:#1b2421; --text:#e8efec; --muted:#9fb0a9; --line:#2d3a36;
+    --brand:#25b866; --brand-text:#06210f; --bubble:#144d37; --chat:#0b141a; color-scheme:dark;
+  }
+  html{height:100%}
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+  h1{font-size:1.4rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:.95rem}
+  .grid{display:grid;gap:16px;grid-template-columns:1fr}
+  @media(min-width:820px){.grid{grid-template-columns:1fr 1fr;align-items:start}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{font-size:1rem;margin:0 0 12px}
+  label{display:block;font-weight:600;font-size:.85rem;margin:12px 0 4px}
+  label small{font-weight:400;color:var(--muted)}
+  input,select,textarea{width:100%;padding:10px 12px;font:inherit;color:var(--text);
+    background:var(--bg);border:1px solid var(--line);border-radius:10px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .check{display:flex;gap:8px;align-items:center;font-weight:400;margin:12px 0 0}
+  .check input{width:auto}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 16px;cursor:pointer;
+    background:var(--brand);color:var(--brand-text);text-decoration:none;display:inline-block}
+  button.sec{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  /* ===== Pré-visualização estilo WhatsApp ===== */
+  .chat{background:var(--chat);border-radius:12px;padding:14px;min-height:120px}
+  .bubble{background:var(--bubble);border-radius:10px;padding:10px 12px;max-width:100%;
+    white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:.95rem}
+  .bubble a{color:#2a7fd1;text-decoration:underline}
+  .empty{color:var(--muted);font-size:.9rem}
+  textarea.out{min-height:210px;margin-top:12px;font-size:.9rem}
+  .note{font-size:.8rem;color:var(--muted);margin:10px 0 0}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.9rem;
+    opacity:0;pointer-events:none;transition:opacity .2s}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚡ Gerador de Ofertas para WhatsApp</h1>
+  <p class="sub">Cole o link, preencha os dados e copie a mensagem pronta. O link é mantido exatamente como colado, sem encurtar.</p>
+
+  <div class="grid">
+    <!-- ===== FORMULÁRIO ===== -->
+    <section class="card">
+      <h2>Dados da oferta</h2>
+
+      <label for="link">Link do produto <small>(obrigatório)</small></label>
+      <input id="link" type="url" inputmode="url" placeholder="https://..." autocomplete="off">
+
+      <label for="titulo">Título do produto</label>
+      <input id="titulo" type="text" placeholder="Ex.: Jogo de jantar 20 peças completo de cerâmica">
+
+      <label for="destaque">Frase de destaque <small>(opcional, sai em negrito)</small></label>
+      <input id="destaque" type="text" placeholder="Ex.: VOCÊ PODE ESCOLHER ENTRE SEIS CORES!!">
+
+      <div class="row">
+        <div>
+          <label for="de">Preço “De” <small>(opcional)</small></label>
+          <input id="de" type="text" inputmode="decimal" placeholder="150,00">
+        </div>
+        <div>
+          <label for="por">Preço “Por”</label>
+          <input id="por" type="text" inputmode="decimal" placeholder="77,00">
+        </div>
+      </div>
+
+      <label for="obs">Observação do preço <small>(opcional)</small></label>
+      <input id="obs" type="text" placeholder="Ex.: SELECIONANDO A OPÇÃO DE 10 PEÇAS">
+
+      <label for="cupom">Cupom <small>(opcional)</small></label>
+      <input id="cupom" type="text" placeholder="Ex.: ACHADOS10">
+
+      <label for="cab">Chamada no topo</label>
+      <select id="cab">
+        <option>⚡ OFERTA RELÂMPAGO ⚡</option>
+        <option>🔥 ACHADINHO DO DIA 🔥</option>
+        <option>🚨 PROMOÇÃO IMPERDÍVEL 🚨</option>
+        <option>💥 PREÇO DERRUBADO 💥</option>
+        <option>⏰ CORRE QUE ACABA RÁPIDO ⏰</option>
+        <option value="">(sem chamada)</option>
+      </select>
+
+      <label class="check"><input id="pct" type="checkbox"> Mostrar % de desconto (calculado automaticamente)</label>
+      <label class="check"><input id="imediato" type="checkbox"> Adicionar “ENVIO IMEDIATO” ao título</label>
+
+      <div class="btns">
+        <button class="sec" id="limpar" type="button">Limpar tudo</button>
+      </div>
+    </section>
+
+    <!-- ===== RESULTADO ===== -->
+    <section class="card">
+      <h2>Mensagem gerada</h2>
+      <div class="chat"><div class="bubble" id="preview"><span class="empty">A prévia aparece aqui quando você colar o link.</span></div></div>
+
+      <label for="saida" style="margin-top:14px">Texto final <small>(você pode editar antes de copiar)</small></label>
+      <textarea id="saida" class="out"></textarea>
+
+      <div class="btns">
+        <button id="copiar" type="button" disabled>📋 Copiar mensagem</button>
+        <a class="btn" id="zap" href="#" target="_blank" rel="noopener" style="display:none">Abrir no WhatsApp</a>
+      </div>
+      <p class="note">Dica: a foto do produto aparece sozinha na prévia do WhatsApp quando o link está na mensagem. Se preferir, envie a imagem e cole o texto na legenda.</p>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast">Mensagem copiada!</div>
+
+<script>
+  // ===== Atalhos =====
+  const $ = id => document.getElementById(id);
+  const campos = ['link','titulo','destaque','de','por','obs','cupom','cab','pct','imediato'];
+  let editadoManual = false; // true se o usuário mexeu no texto final
+
+  // ===== Converte "1.234,50" / "77" / "77.5" em número =====
+  function num(v){
+    v = String(v||'').replace(/[^\d.,]/g,'').trim();
+    if(!v) return NaN;
+    if(v.includes(',')) v = v.replace(/\./g,'').replace(',','.');
+    return parseFloat(v);
+  }
+  // ===== Formata como R$ 1.234,50 =====
+  const brl = n => 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // ===== Monta a mensagem (formatação do WhatsApp: *negrito* _itálico_ ~riscado~) =====
+  function montar(){
+    const link = $('link').value.trim();           // NUNCA alterado nem encurtado
+    if(!link) return '';
+    const L = [];
+    const cab = $('cab').value;
+    if(cab){ L.push(cab, ''); }
+
+    const dest = $('destaque').value.trim();
+    if(dest){ L.push('🗣️ *' + dest + '*🤩', ''); }
+
+    let tit = $('titulo').value.trim();
+    if(tit && $('imediato').checked) tit += ' ENVIO IMEDIATO';
+    if(tit){ L.push('👉🏼 _' + tit + '_', ''); }
+
+    const de = num($('de').value), por = num($('por').value);
+    if(!isNaN(de) && !isNaN(por) || !isNaN(de)){
+      if(!isNaN(de)) L.push('~De: ' + brl(de) + '~ ❌');
+    }
+    if(!isNaN(por)){
+      const obs = $('obs').value.trim();
+      L.push('*Por: ' + brl(por) + '*' + (obs ? ' (' + obs + ')' : '') + '✅');
+      if($('pct').checked && !isNaN(de) && de > por){
+        L.push('🔥 ' + Math.round((1 - por/de)*100) + '% OFF');
+      }
+    }
+    const cupom = $('cupom').value.trim();
+    if(cupom){ L.push('', '🎟️ Cupom: *' + cupom + '*'); }
+
+    L.push('', '🔗 Link: ' + link);
+    return L.join('\n');
+  }
+
+  // ===== Prévia: converte marcação do WhatsApp em HTML seguro =====
+  function paraHtml(t){
+    const esc = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return esc
+      .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
+      .replace(/(^|[\s(])\*([^*\n]+)\*/g,'$1<b>$2</b>')
+      .replace(/(^|[\s(])_([^_\n]+)_/g,'$1<i>$2</i>')
+      .replace(/(^|[\s(])~([^~\n]+)~/g,'$1<s>$2</s>');
+  }
+
+  // ===== Atualiza tela =====
+  function atualizar(fromForm){
+    if(fromForm) editadoManual = false;
+    if(!editadoManual) $('saida').value = montar();
+    const t = $('saida').value;
+    $('preview').innerHTML = t ? paraHtml(t) : '<span class="empty">A prévia aparece aqui quando você colar o link.</span>';
+    $('copiar').disabled = !t;
+    const z = $('zap');
+    z.style.display = t ? 'inline-block' : 'none';
+    z.href = 'https://wa.me/?text=' + encodeURIComponent(t);
+  }
+
+  campos.forEach(id => {
+    $(id).addEventListener('input', () => atualizar(true));
+    $(id).addEventListener('change', () => atualizar(true));
+  });
+  $('saida').addEventListener('input', () => { editadoManual = true; atualizar(false); });
+
+  // ===== Copiar =====
+  function aviso(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('on');
+    setTimeout(() => t.classList.remove('on'), 1800);
+  }
+  $('copiar').addEventListener('click', async () => {
+    const txt = $('saida').value;
+    try{
+      await navigator.clipboard.writeText(txt);
+      aviso('Mensagem copiada!');
+    }catch(e){
+      // Plano B para navegadores sem permissão da área de transferência
+      $('saida').select(); document.execCommand('copy'); aviso('Mensagem copiada!');
+    }
+  });
+
+  // ===== Limpar =====
+  $('limpar').addEventListener('click', () => {
+    ['link','titulo','destaque','de','por','obs','cupom'].forEach(id => $(id).value = '');
+    $('pct').checked = false; $('imediato').checked = false; $('cab').selectedIndex = 0;
+    atualizar(true);
+  });
+
+  atualizar(true);
+</script>
+</body>
+</html>
